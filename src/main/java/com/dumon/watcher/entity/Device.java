@@ -4,8 +4,6 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
@@ -13,12 +11,11 @@ import javax.persistence.Id;
 public class Device {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String macAddress;
+    private long macAddress;
 
     private String ipAddress;
     private String name;
     private LocalDateTime lastActiveTime;
-    private boolean isActive;
+    private boolean active;
 
 }

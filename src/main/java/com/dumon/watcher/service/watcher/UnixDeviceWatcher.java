@@ -2,6 +2,8 @@ package com.dumon.watcher.service.watcher;
 
 import com.dumon.watcher.entity.Device;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -32,7 +34,13 @@ public class UnixDeviceWatcher extends DeviceWatcher {
     }
 
     @Override
-    public boolean checkExisted(Device device) {
+    public boolean checkExisted(final Device device) {
+        try {
+            InetAddress address = InetAddress.getByName(device.getIpAddress());
+            return address.isReachable(getPingTimeout());
+        } catch (final IOException exc) {
+            LOG.error("Error on device ping by IP {}", device.getIpAddress(), exc);
+        }
         return false;
     }
 }

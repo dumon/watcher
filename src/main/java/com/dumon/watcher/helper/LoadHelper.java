@@ -18,6 +18,6 @@ public class LoadHelper {
      */
     public static List<User> importUsers() throws IOException {
         return new ObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY).
-                readValue(User.class.getResourceAsStream("/Users.json"),new TypeReference<List<User>>(){});
+                readValue(User.class.getResourceAsStream("/users.json"),new TypeReference<List<User>>(){});
     }
 }

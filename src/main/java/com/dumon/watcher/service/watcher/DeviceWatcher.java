@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -23,9 +25,11 @@ import java.util.stream.Collectors;
 
 public abstract class DeviceWatcher implements Watcher {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DeviceWatcher.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(DeviceWatcher.class);
     private static final int DEFAULT_PING_TIMEOUT = 2000;
-    private static final ForkJoinPool THREAD_POOL = new ForkJoinPool(50);
+    private static final String DEFAULT_IP_ADDRESS = "10.0.0.1";
+    private static final String LOCAL_SUBNET_IP_PARAM = "-Dip";
+    private static final ForkJoinPool THREAD_POOL = new ForkJoinPool(100);
 
     private final String[] arpCmd;
     private final Pattern macAddressPattern;
@@ -35,20 +39,15 @@ public abstract class DeviceWatcher implements Watcher {
     public DeviceWatcher(final String[] arpCmd, final Pattern macAddressPattern) {
         this.arpCmd = arpCmd;
         this.macAddressPattern = macAddressPattern;
-
-        try {
-            localhost = InetAddress.getAllByName("10.0.0.1")[0];
-        } catch (final UnknownHostException e) {
-            System.out.println("Cannot identify local host!!!");
-        }
+        localhost = getIp();
     }
 
     protected Map<String, String> asyncObtainMacIpMap() {
         Map<String, String> result = Maps.newConcurrentMap();
         getAllReachableIps().stream().parallel().forEach(ip ->
-                CompletableFuture.runAsync(() ->
-                        Optional.ofNullable(getMacForIp(ip)).
-                                ifPresent(mac -> result.put(mac, ip)), THREAD_POOL));
+                Optional.ofNullable(getMacForIp(ip)).
+                        ifPresent(mac -> result.put(mac, ip))
+        );
         return result;
     }
 
@@ -124,5 +123,27 @@ public abstract class DeviceWatcher implements Watcher {
     @Override
     public void setPingTimeout(int pingTimeout) {
         this.pingTimeout = pingTimeout;
+    }
+
+    protected int getPingTimeout() {
+        return pingTimeout;
+    }
+
+    private static InetAddress getIp() {
+        RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+        List<String> listOfArguments = runtimeMXBean.getInputArguments();
+
+        String localIp = listOfArguments.stream()
+                .filter(arg -> arg.contains(LOCAL_SUBNET_IP_PARAM))
+                .findFirst()
+                .map(String::toLowerCase)
+                .map(arg -> arg.substring(LOCAL_SUBNET_IP_PARAM.length() + 1))
+                .orElse(DEFAULT_IP_ADDRESS);
+        try {
+            return InetAddress.getByName(localIp);
+        } catch (UnknownHostException exc) {
+            LOG.trace("Cannot identify local address by IP {}", localIp, exc);
+        }
+        return null;
     }
 }
