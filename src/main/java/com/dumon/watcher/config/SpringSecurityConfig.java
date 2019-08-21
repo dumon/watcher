@@ -1,6 +1,5 @@
 package com.dumon.watcher.config;
 
-import com.dumon.watcher.entity.User;
 import com.dumon.watcher.helper.LoadHelper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +7,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configurers.provisioning.InMemoryUserDetailsManagerConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,7 +18,6 @@ import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHtt
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.sql.DataSource;
@@ -51,8 +50,10 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	@Override
-	public void configure(final WebSecurity web) {
-		  web.ignoring().antMatchers("/console/**");
+	public void configure(final WebSecurity webSecurity) {
+		  webSecurity.ignoring()
+				  .antMatchers("/login")
+				  .antMatchers("/console/**");
 	}
 
 	@Override
@@ -60,24 +61,32 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 		http
 			.httpBasic() //HTTP Basic authentication
 			.and()
-			.authorizeRequests()
-			.antMatchers(HttpMethod.GET, "/**").hasRole("USER")
-			.antMatchers(HttpMethod.GET, "/**").hasRole("ADMIN")
-			.antMatchers(HttpMethod.POST, "/**").hasRole("ADMIN")
-			.antMatchers(HttpMethod.PUT, "/**").hasRole("ADMIN")
-			.antMatchers(HttpMethod.PATCH, "/**").hasRole("ADMIN")
-			.antMatchers(HttpMethod.DELETE, "/**").hasRole("ADMIN")
-			.and()
 			.csrf().disable()
-			.formLogin().disable();
+			.authorizeRequests()
+				.antMatchers(HttpMethod.GET,"/home").hasAnyRole()
+				.antMatchers(HttpMethod.POST,"/j_spring_security_check").hasAnyRole()
+				.antMatchers("/devices/**").hasRole("ADMIN")
+				.antMatchers("/app/**").hasRole("ADMIN")
+			.and()
+			.formLogin()
+				.loginPage("/login")
+				.loginProcessingUrl("/j_spring_security_check")
+				.failureUrl("/login?error")
+				.usernameParameter("j_username")
+				.passwordParameter("j_password")
+				.permitAll()
+			.and()
+			.logout()
+				.permitAll()
+				.logoutUrl("/logout")
+				.logoutSuccessUrl("/login?logout")
+				.invalidateHttpSession(true);
 	}
 
 	@Override
 	public void configure(final AuthenticationManagerBuilder auth) throws Exception {
-		List<User> users = LoadHelper.importUsers();
-		for (User user : users) {
-			auth.inMemoryAuthentication()
-					.withUser(user.getLogin()).password(passwordEncoder().encode(user.getPass())).roles(user.getRole());
-		}
+		InMemoryUserDetailsManagerConfigurer<AuthenticationManagerBuilder> inMemoryAuth = auth.inMemoryAuthentication();
+		LoadHelper.importUsers().forEach(user -> inMemoryAuth
+				.withUser(user.getLogin()).password(passwordEncoder().encode(user.getPass())).roles(user.getRole()));
 	}
 }

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%@ page errorPage = "error.jsp" %>
+
+<c:set var="contextPath" value="${pageContext.request.contextPath}"/>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Network devices</title>
+        <!-- Bootstrap core CSS -->
+        <link href="webjars/bootstrap/4.3.1/css/bootstrap.css" rel="stylesheet">
+    </head>
+
+    <body>
+        <div class="container">
+            <sec:authorize access="!isAuthenticated()" method="GET" url="/login">
+                <% response.sendRedirect("login"); %>
+            </sec:authorize>
+
+            <sec:authorize access="isAuthenticated()">
+                <div class="starter-template">
+                    <h1>Active devices list:</h1>
+                    <hr style="margin-top: 0px;border-top: 1px solid #337ab7">
+                </div>
+
+                <c:choose>
+                    <c:when test="${empty devices}">
+                            No devices found...
+                    </c:when>
+                    <c:otherwise>
+                        <table class="table">
+                            <thead class="thead-dark">
+                            <tr>
+                                <th>Name</th>
+                                <th>IP</th>
+                                <th>MAC</th>
+                                <th>Active</th>
+                                <th>LastActive</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <c:forEach items="${devices}" var="device">
+                            <tr>
+                                <td><jsp:text>${device.name}</jsp:text></td>
+                                <td><jsp:text>${device.ipAddress}</jsp:text></td>
+                                <td><jsp:text>${device.macAddress}</jsp:text></td>
+                                <td><jsp:text>${device.active}</jsp:text></td>
+                                <td><jsp:text>${device.lastActiveTime}</jsp:text></td>
+                            </tr>
+                            </c:forEach>
+                            </tbody>
+                        </table>
+                    </c:otherwise>
+                </c:choose>
+
+                <hr style="margin-top: 0px;border-top: 1px solid #337ab7">
+                <p>Your login: <sec:authentication property="principal.username" /></p>
+                <p><a class="btn btn-lg btn-danger" href="<c:url value="/logout" />" role="button">Logout</a></p>
+
+            </sec:authorize>
+        </div>
+    </body>
+</html>

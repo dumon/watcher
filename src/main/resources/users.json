@@ -5,7 +5,7 @@
     "role": "ADMIN"
   },
   {
-    "login": "user1",
+    "login": "user",
     "pass": "123",
     "role": "USER"
   }
