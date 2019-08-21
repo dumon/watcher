@@ -1,7 +1,6 @@
 package com.dumon.watcher.service;
 
 import com.dumon.watcher.converter.DeviceConverter;
-import com.dumon.watcher.dto.MacIpData;
 import com.dumon.watcher.entity.Device;
 import com.dumon.watcher.helper.ConversionHelper;
 import com.dumon.watcher.repo.DeviceRepository;
@@ -34,6 +33,10 @@ public class DeviceManager {
         watcher = DeviceWatcherFactory.getWatcher();
     }
 
+    public void addByIp(final String ip) {
+        watcher.getDeviceByIp(ip).map(deviceConverter::convert).ifPresent(deviceRepository::save);
+    }
+
     public void assignName(final String deviceId, final String name) {
         long id = ConversionHelper.stringMacToLong(deviceId);
         deviceRepository.findById(id).ifPresent(device -> device.setName(name));
@@ -43,21 +46,12 @@ public class DeviceManager {
      * Scan subnet and obtain all devices
      */
     public void scanNetwork() {
-        List<Device> foundDevices = watcher.scanNetwork().entrySet().stream().parallel()
-                .map(entry -> MacIpData.builder().macAddress(entry.getKey()).ipAddress(entry.getValue()).build())
+        List<Device> foundDevices = watcher.scanNetwork().stream().parallel()
                 .map(deviceConverter::convert)
                 .collect(Collectors.toList());
         List<Long> foundIds = foundDevices.stream().map(Device::getMacAddress).collect(Collectors.toList());
         updateNonActiveDevices(foundIds);
         deviceRepository.saveAll(foundDevices);
-    }
-
-    private void updateNonActiveDevices(final List<Long> activeDeviceIds) {
-        deviceRepository.findAll().forEach(device -> {
-            if (!activeDeviceIds.contains(device.getMacAddress())) {
-                device.setActive(false);
-            }
-        });
     }
 
     /**
@@ -69,6 +63,14 @@ public class DeviceManager {
                 device.setLastActiveTime(LocalDateTime.now());
                 device.setActive(true);
             } else {
+                device.setActive(false);
+            }
+        });
+    }
+
+    private void updateNonActiveDevices(final List<Long> activeDeviceIds) {
+        deviceRepository.findAll().forEach(device -> {
+            if (!activeDeviceIds.contains(device.getMacAddress())) {
                 device.setActive(false);
             }
         });

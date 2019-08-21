@@ -5,7 +5,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class MacIpData {
+public class DeviceData {
     private String macAddress;
     private String ipAddress;
+    private String hostname;
 }

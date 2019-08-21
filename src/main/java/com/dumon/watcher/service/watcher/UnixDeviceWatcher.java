@@ -1,11 +1,11 @@
 package com.dumon.watcher.service.watcher;
 
 import com.dumon.watcher.entity.Device;
+import com.google.common.base.Splitter;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Map;
-import java.util.Optional;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class UnixDeviceWatcher extends DeviceWatcher {
@@ -13,24 +13,13 @@ public class UnixDeviceWatcher extends DeviceWatcher {
     private static final String[] ARP_CMD = {"arp"};
     private static final Pattern MAC_ADDRESS_PATTERN =
             Pattern.compile("[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+");
+    private static final Pattern NSLOOKUP_RESULT_LINE_PATTERN =
+            Pattern.compile("^.*name.*.=.*$");
+    private static final String GET_DNS_IP_CMD =
+            "cat /etc/resolv.conf |grep -i '^nameserver'|head -n1|cut -d ' ' -f2";
 
-    public UnixDeviceWatcher() {
-        super(ARP_CMD, MAC_ADDRESS_PATTERN);
-    }
-
-    @Override
-    public Map<String, String> scanNetwork() {
-        return asyncObtainMacIpMap();
-    }
-
-    @Override
-    public Optional<Device> pingDevice(int macAddress) {
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<Device> pingByIp(int ipAddress) {
-        return Optional.empty();
+    UnixDeviceWatcher() {
+        super(ARP_CMD);
     }
 
     @Override
@@ -42,5 +31,31 @@ public class UnixDeviceWatcher extends DeviceWatcher {
             LOG.error("Error on device ping by IP {}", device.getIpAddress(), exc);
         }
         return false;
+    }
+
+    @Override
+    protected String extractHostName(final String line) {
+        List<String> lineWords = Splitter.on(" = ").splitToList(line);
+        return lineWords.get(lineWords.size() - 1);
+    }
+
+    @Override
+    protected Pattern getDnsIpPattern() {
+        return getIpMatchPattern();
+    }
+
+    @Override
+    protected Pattern getNslookupPattern() {
+        return NSLOOKUP_RESULT_LINE_PATTERN;
+    }
+
+    @Override
+    protected Pattern getMacAddressPattern() {
+        return MAC_ADDRESS_PATTERN;
+    }
+
+    @Override
+    protected String getDnsIpGettingCmd() {
+        return GET_DNS_IP_CMD;
     }
 }

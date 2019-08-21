@@ -1,31 +1,25 @@
 package com.dumon.watcher.service.watcher;
 
+import com.dumon.watcher.dto.DeviceData;
 import com.dumon.watcher.entity.Device;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 public interface Watcher {
 
     /**
-     * Scan full subnet to detect devices
+     * Scan full subnet to detect devices (multi-threading process)
      * @return
      */
-    Map<String, String> scanNetwork();
+    List<DeviceData> scanNetwork();
 
     /**
-     * Ping existed device by IP
-     * @param macAddress
-     * @return
-     */
-    Optional<Device> pingDevice(int macAddress);
-
-    /**
-     * Ping
+     * get reachable device by IP
      * @param ipAddress
      * @return
      */
-    Optional<Device> pingByIp(int ipAddress);
+    Optional<DeviceData> getDeviceByIp(String ipAddress);
 
     /**
      * Check existed device

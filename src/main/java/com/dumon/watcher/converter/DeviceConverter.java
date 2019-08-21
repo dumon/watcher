@@ -2,7 +2,7 @@ package com.dumon.watcher.converter;
 
 import static com.dumon.watcher.helper.ConversionHelper.stringMacToLong;
 
-import com.dumon.watcher.dto.MacIpData;
+import com.dumon.watcher.dto.DeviceData;
 import com.dumon.watcher.entity.Device;
 import com.dumon.watcher.repo.DeviceRepository;
 import org.springframework.stereotype.Component;
@@ -11,23 +11,24 @@ import java.time.LocalDateTime;
 import javax.annotation.Resource;
 
 @Component
-public class DeviceConverter implements Converter<MacIpData, Device> {
+public class DeviceConverter implements Converter<DeviceData, Device> {
 
     @Resource
     private DeviceRepository deviceRepository;
 
     @Override
-    public Device convert(final MacIpData source) {
+    public Device convert(final DeviceData source) {
         Device device = getDevice(source.getMacAddress());
         populate(source, device);
         return device;
     }
 
     @Override
-    public void populate(final MacIpData source, final Device device) {
+    public void populate(final DeviceData source, final Device device) {
         device.setActive(true);
         device.setLastActiveTime(LocalDateTime.now());
         device.setIpAddress(source.getIpAddress());
+        device.setName(source.getHostname());
     }
 
     private Device getDevice(final String macAddress) {
