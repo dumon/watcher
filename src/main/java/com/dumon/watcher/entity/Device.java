@@ -2,7 +2,7 @@ package com.dumon.watcher.entity;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -15,7 +15,7 @@ public class Device {
 
     private String ipAddress;
     private String name;
-    private LocalDateTime lastActiveTime;
+    private Date lastActiveTime;
     private boolean active;
 
 }

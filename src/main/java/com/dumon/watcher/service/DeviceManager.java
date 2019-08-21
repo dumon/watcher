@@ -10,7 +10,7 @@ import com.google.common.base.Preconditions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
@@ -60,7 +60,7 @@ public class DeviceManager {
     public void renewExisted() {
         deviceRepository.findAll().forEach(device -> {
             if (pingDevice(device)) {
-                device.setLastActiveTime(LocalDateTime.now());
+                device.setLastActiveTime(new Date());
                 device.setActive(true);
             } else {
                 device.setActive(false);

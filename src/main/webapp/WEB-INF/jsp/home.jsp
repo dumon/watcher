@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%@ taglib prefix="dev" uri="/WEB-INF/tag/device.tld" %>
 <%@ page errorPage = "error.jsp" %>
 
 <c:set var="contextPath" value="${pageContext.request.contextPath}"/>
@@ -42,13 +44,13 @@
                             </thead>
                             <tbody>
                             <c:forEach items="${devices}" var="device">
-                            <tr>
-                                <td><jsp:text>${device.name}</jsp:text></td>
-                                <td><jsp:text>${device.ipAddress}</jsp:text></td>
-                                <td><jsp:text>${device.macAddress}</jsp:text></td>
-                                <td><jsp:text>${device.active}</jsp:text></td>
-                                <td><jsp:text>${device.lastActiveTime}</jsp:text></td>
-                            </tr>
+                                <tr>
+                                    <td><jsp:text>${device.name}</jsp:text></td>
+                                    <td><jsp:text>${device.ipAddress}</jsp:text></td>
+                                    <td><dev:mac>${device.macAddress}</dev:mac></td>
+                                    <td><jsp:text>${device.active}</jsp:text></td>
+                                    <td><fmt:formatDate value="${device.lastActiveTime}" pattern="yyyy-MM-dd HH:mm" /></td>
+                                </tr>
                             </c:forEach>
                             </tbody>
                         </table>

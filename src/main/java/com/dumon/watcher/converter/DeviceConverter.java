@@ -7,7 +7,7 @@ import com.dumon.watcher.entity.Device;
 import com.dumon.watcher.repo.DeviceRepository;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import javax.annotation.Resource;
 
 @Component
@@ -26,7 +26,7 @@ public class DeviceConverter implements Converter<DeviceData, Device> {
     @Override
     public void populate(final DeviceData source, final Device device) {
         device.setActive(true);
-        device.setLastActiveTime(LocalDateTime.now());
+        device.setLastActiveTime(new Date());
         device.setIpAddress(source.getIpAddress());
         device.setName(source.getHostname());
     }
