@@ -1,6 +1,12 @@
 package com.dumon.watcher.service.watcher;
 
+import static com.dumon.watcher.helper.Constants.DEFAULT_IP_ADDRESS;
+import static com.dumon.watcher.helper.Constants.DEFAULT_PING_TIMEOUT;
+import static com.dumon.watcher.helper.Constants.THREAD_POOL_CAPACITY;
+
 import com.dumon.watcher.dto.DeviceData;
+import com.dumon.watcher.helper.Constants;
+import com.dumon.watcher.helper.LoadHelper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -10,8 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -26,11 +30,8 @@ import java.util.stream.Collectors;
 
 public abstract class DeviceWatcher implements Watcher {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(DeviceWatcher.class);
-    private static final int DEFAULT_PING_TIMEOUT = 2000;
-    private static final String DEFAULT_IP_ADDRESS = "10.0.0.1";
-    private static final String LOCAL_SUBNET_IP_PARAM = "-Dip";
-    private static final ForkJoinPool THREAD_POOL = new ForkJoinPool(150);
+    static final Logger LOG = LoggerFactory.getLogger(DeviceWatcher.class);
+    private static final ForkJoinPool THREAD_POOL = new ForkJoinPool(THREAD_POOL_CAPACITY);
     private static final Pattern IP_MATCH_PATTERN = Pattern.compile("([0-9]{1,3}.?){4}");
 
     private final String[] arpCmd;
@@ -210,22 +211,14 @@ public abstract class DeviceWatcher implements Watcher {
     }
 
     private InetAddress getIp() {
-        RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-        List<String> listOfArguments = runtimeMXBean.getInputArguments();
-
-        InetAddress result = null;
-        String localIp = listOfArguments.stream()
-                .filter(arg -> arg.contains(LOCAL_SUBNET_IP_PARAM))
-                .findFirst()
-                .map(String::toLowerCase)
-                .map(arg -> arg.substring(LOCAL_SUBNET_IP_PARAM.length() + 1))
-                .orElseGet(this::getLocalIp);
+        InetAddress localIp = null;
+        String inputIp = LoadHelper.getJvmArg(Constants.JVM.IP).orElseGet(this::getLocalIp);
         try {
-            result = InetAddress.getByName(localIp);
+            localIp = InetAddress.getByName(inputIp);
         } catch (UnknownHostException exc) {
-            LOG.trace("Cannot resolve IP {}", localIp, exc);
+            LOG.trace("Cannot resolve IP {}", inputIp, exc);
         }
-        return result;
+        return localIp;
     }
 
     private String getLocalIp() {

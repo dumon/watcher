@@ -1,5 +1,7 @@
 package com.dumon.watcher.config;
 
+import com.dumon.watcher.entity.User;
+import com.dumon.watcher.helper.Constants;
 import com.dumon.watcher.helper.LoadHelper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +20,8 @@ import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHtt
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.sql.DataSource;
@@ -86,7 +90,14 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Override
 	public void configure(final AuthenticationManagerBuilder auth) throws Exception {
 		InMemoryUserDetailsManagerConfigurer<AuthenticationManagerBuilder> inMemoryAuth = auth.inMemoryAuthentication();
-		LoadHelper.importUsers().forEach(user -> inMemoryAuth
+		Optional<String> usersFilePath = LoadHelper.getJvmArg(Constants.JVM.USERS);
+		List<User> users;
+		if (usersFilePath.isPresent()) {
+			users = LoadHelper.importUsersFromFile(usersFilePath.get());
+		} else {
+			users = LoadHelper.importDefaultUsers();
+		}
+		users.forEach(user -> inMemoryAuth
 				.withUser(user.getLogin()).password(passwordEncoder().encode(user.getPass())).roles(user.getRole()));
 	}
 }
