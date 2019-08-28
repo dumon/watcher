@@ -11,6 +11,5 @@ public final class Constants {
     public static final class JVM {
         static final String JVM_PARAM_PREFIX = "-D";
         public static final String USERS = "users";
-        public static final String APP_CONFIG = "app.config";
     }
 }

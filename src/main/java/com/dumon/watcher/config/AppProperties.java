@@ -1,6 +1,8 @@
 package com.dumon.watcher.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.PropertySources;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
@@ -12,6 +14,9 @@ import javax.validation.constraints.Pattern;
 @Component
 @Validated
 @ConfigurationProperties("app")
+@PropertySources({
+    @PropertySource("classpath:./config/app.config"),
+    @PropertySource(value = "file:${app.config}", ignoreResourceNotFound = true)})
 public class AppProperties {
 
     @NotNull
