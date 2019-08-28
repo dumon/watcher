@@ -1,5 +1,7 @@
 package com.dumon.watcher.helper;
 
+import static com.dumon.watcher.helper.Constants.JVM.JVM_PARAM_PREFIX;
+
 import com.dumon.watcher.entity.User;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -53,7 +55,7 @@ public class LoadHelper {
 
         return listOfArguments.stream()
                 .filter(arg -> arg.contains(argName))
-                .map(arg -> arg.substring(argName.length() + 1))
+                .map(arg -> arg.substring(JVM_PARAM_PREFIX.length() + argName.length() + 1))
                 .findFirst();
     }
 }

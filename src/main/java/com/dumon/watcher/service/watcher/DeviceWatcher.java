@@ -5,8 +5,6 @@ import static com.dumon.watcher.helper.Constants.DEFAULT_PING_TIMEOUT;
 import static com.dumon.watcher.helper.Constants.THREAD_POOL_CAPACITY;
 
 import com.dumon.watcher.dto.DeviceData;
-import com.dumon.watcher.helper.Constants;
-import com.dumon.watcher.helper.LoadHelper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -33,6 +31,8 @@ public abstract class DeviceWatcher implements Watcher {
     static final Logger LOG = LoggerFactory.getLogger(DeviceWatcher.class);
     private static final ForkJoinPool THREAD_POOL = new ForkJoinPool(THREAD_POOL_CAPACITY);
     private static final Pattern IP_MATCH_PATTERN = Pattern.compile("([0-9]{1,3}.?){4}");
+    protected static final Pattern MAC_ADDRESS_PATTERN =
+            Pattern.compile("[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+");
 
     private final String[] arpCmd;
     private final String nslookupCmd = "nslookup %s %s";
@@ -40,9 +40,9 @@ public abstract class DeviceWatcher implements Watcher {
     private final String dnsIp;
     private int pingTimeout = DEFAULT_PING_TIMEOUT;
 
-    public DeviceWatcher(final String[] arpCmd) {
+    public DeviceWatcher(final String localIp, final String[] arpCmd) {
+        localhost = convertIpString(localIp);
         this.arpCmd = arpCmd;
-        localhost = getIp();
         dnsIp = Optional.ofNullable(getDnsServerIp()).orElse(DEFAULT_IP_ADDRESS);
     }
 
@@ -185,6 +185,15 @@ public abstract class DeviceWatcher implements Watcher {
 
     protected abstract String getDnsIpGettingCmd();
 
+    protected int getPingTimeout() {
+        return pingTimeout;
+    }
+
+    @Override
+    public void setPingTimeout(int pingTimeout) {
+        this.pingTimeout = pingTimeout;
+    }
+
     protected Pattern getIpMatchPattern() {
         return IP_MATCH_PATTERN;
     }
@@ -201,22 +210,12 @@ public abstract class DeviceWatcher implements Watcher {
         return String.format(nslookupCmd, ip , dnsIp);
     }
 
-    @Override
-    public void setPingTimeout(int pingTimeout) {
-        this.pingTimeout = pingTimeout;
-    }
-
-    protected int getPingTimeout() {
-        return pingTimeout;
-    }
-
-    private InetAddress getIp() {
+    private InetAddress convertIpString(final String ip) {
         InetAddress localIp = null;
-        String inputIp = LoadHelper.getJvmArg(Constants.JVM.IP).orElseGet(this::getLocalIp);
         try {
-            localIp = InetAddress.getByName(inputIp);
+            localIp = InetAddress.getByName(ip);
         } catch (UnknownHostException exc) {
-            LOG.trace("Cannot resolve IP {}", inputIp, exc);
+            LOG.trace("Cannot resolve IP {}", ip, exc);
         }
         return localIp;
     }

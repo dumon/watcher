@@ -1,5 +1,6 @@
 package com.dumon.watcher.service;
 
+import com.dumon.watcher.config.AppProperties;
 import com.dumon.watcher.converter.DeviceConverter;
 import com.dumon.watcher.entity.Device;
 import com.dumon.watcher.helper.ConversionHelper;
@@ -7,7 +8,6 @@ import com.dumon.watcher.repo.DeviceRepository;
 import com.dumon.watcher.service.watcher.DeviceWatcherFactory;
 import com.dumon.watcher.service.watcher.Watcher;
 import com.google.common.base.Preconditions;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -23,14 +23,16 @@ public class DeviceManager {
     private DeviceRepository deviceRepository;
     @Resource
     private DeviceConverter deviceConverter;
-    @Value("${app.watcher.ping.timeout:2000}")
-    private int pingTimeout;
+    @Resource
+    private AppProperties appProperties;
 
     private Watcher watcher;
 
     @PostConstruct
     public void init() {
-        watcher = DeviceWatcherFactory.getWatcher();
+        AppProperties.Watcher watcherConfig = appProperties.getWatcher();
+        this.watcher = DeviceWatcherFactory.getWatcher(watcherConfig.getLocalIp());
+        this.watcher.setPingTimeout(watcherConfig.getPingTimeout());
     }
 
     public void addByIp(final String ip) {

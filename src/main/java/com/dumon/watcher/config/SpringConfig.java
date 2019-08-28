@@ -1,10 +1,13 @@
 package com.dumon.watcher.config;
 
+import static com.dumon.watcher.helper.Constants.JVM.APP_CONFIG;
+
 import com.dumon.watcher.entity.User;
 import com.dumon.watcher.helper.Constants;
 import com.dumon.watcher.helper.LoadHelper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -29,7 +32,7 @@ import javax.sql.DataSource;
 @EnableWebSecurity
 @Configuration
 @EnableJdbcHttpSession
-public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
+public class SpringConfig extends WebSecurityConfigurerAdapter {
 
 	@Resource
 	private ResourceLoader resourceLoader;
@@ -99,5 +102,23 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 		}
 		users.forEach(user -> inMemoryAuth
 				.withUser(user.getLogin()).password(passwordEncoder().encode(user.getPass())).roles(user.getRole()));
+	}
+
+	@Bean
+	public PropertySourcesPlaceholderConfigurer configurer(final ResourceLoader resourceLoader) {
+		PropertySourcesPlaceholderConfigurer placeholderConfigurer = new PropertySourcesPlaceholderConfigurer();
+		placeholderConfigurer.setIgnoreUnresolvablePlaceholders(true);
+		placeholderConfigurer.setIgnoreResourceNotFound(true);
+
+		org.springframework.core.io.Resource[] resources = {
+				resourceLoader.getResource("classpath:application.properties"),
+				resourceLoader.getResource("classpath:./config/app.config"),
+		};
+		LoadHelper.getJvmArg(APP_CONFIG)
+				.map(path -> resourceLoader.getResource("file:" + path))
+				.ifPresent(resource -> resources[resources.length - 1] = resource);
+
+		placeholderConfigurer.setLocations(resources);
+		return placeholderConfigurer;
 	}
 }

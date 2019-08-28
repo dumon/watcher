@@ -9,8 +9,8 @@ public final class Constants {
     public static final int THREAD_POOL_CAPACITY = 150;
 
     public static final class JVM {
-        private static final String JVM_PARAM_PREFIX = "-D";
-        public static final String USERS = JVM_PARAM_PREFIX + "users";
-        public static final String IP = JVM_PARAM_PREFIX + "ip";
+        static final String JVM_PARAM_PREFIX = "-D";
+        public static final String USERS = "users";
+        public static final String APP_CONFIG = "app.config";
     }
 }

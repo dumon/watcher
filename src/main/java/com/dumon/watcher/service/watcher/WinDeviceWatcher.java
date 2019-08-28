@@ -14,8 +14,8 @@ public class WinDeviceWatcher extends DeviceWatcher {
     private static final Pattern NSLOOKUP_RESULT_LINE_PATTERN =
             Pattern.compile("^.*Name:.*$");
 
-    WinDeviceWatcher() {
-        super(ARP_CMD);
+    WinDeviceWatcher(final String ip) {
+        super(ip, ARP_CMD);
     }
 
     @Override

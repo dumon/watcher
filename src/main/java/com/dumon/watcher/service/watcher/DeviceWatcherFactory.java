@@ -4,13 +4,13 @@ import java.util.Optional;
 
 public class DeviceWatcherFactory {
 
-    public static Watcher getWatcher() {
+    public static Watcher getWatcher(final String ip) {
         Watcher watcher = null;
         String OS = System.getProperty("os.name").toLowerCase();
         if (OS.contains("win")) {
-            watcher = new WinDeviceWatcher();
+            watcher = new WinDeviceWatcher(ip);
         }
-        return Optional.ofNullable(watcher).orElse(new UnixDeviceWatcher());
+        return Optional.ofNullable(watcher).orElse(new UnixDeviceWatcher(ip));
     }
 
 }

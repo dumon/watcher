@@ -11,15 +11,13 @@ import java.util.regex.Pattern;
 public class UnixDeviceWatcher extends DeviceWatcher {
 
     private static final String[] ARP_CMD = {"arp"};
-    private static final Pattern MAC_ADDRESS_PATTERN =
-            Pattern.compile("[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+");
     private static final Pattern NSLOOKUP_RESULT_LINE_PATTERN =
             Pattern.compile("^.*name.*.=.*$");
     private static final String GET_DNS_IP_CMD =
             "cat /etc/resolv.conf |grep -i '^nameserver'|head -n1|cut -d ' ' -f2";
 
-    UnixDeviceWatcher() {
-        super(ARP_CMD);
+    UnixDeviceWatcher(final String ip) {
+        super(ip, ARP_CMD);
     }
 
     @Override
