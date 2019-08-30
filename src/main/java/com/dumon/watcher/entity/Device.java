@@ -1,5 +1,6 @@
 package com.dumon.watcher.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.Date;
@@ -15,7 +16,8 @@ public class Device {
 
     private String ipAddress;
     private String name;
-    private Date lastActiveTime;
     private boolean active;
 
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss.SSS")
+    private Date lastActiveTime;
 }

@@ -7,7 +7,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.List;
 import java.util.Map;
 import javax.annotation.Resource;
 
@@ -19,7 +18,7 @@ public class WebController {
 
     @GetMapping({"/", "/home"})
     public ModelAndView home(final Map<String, Object> model) {
-        List<Device> devices = deviceRepository.findDeviceByActiveTrue();
+        Iterable<Device> devices = deviceRepository.findAll();
 
         model.put("devices", devices);
 
