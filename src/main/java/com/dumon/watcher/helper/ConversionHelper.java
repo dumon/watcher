@@ -19,17 +19,17 @@ public final class ConversionHelper {
                 addr & 0xff);
     }
 
-    public static long stringMacToLong(final String addr) {
-        Preconditions.checkNotNull(addr);
-        String[] parts = addr.split(":");
+    public static long stringMacToLong(final String macAddr) {
+        Preconditions.checkNotNull(macAddr, "cannot process macAddr convert due to null value");
+        String[] parts = macAddr.split(":");
         if (parts.length != ETHER_ADDR_LEN) {
-            throw new IllegalArgumentException(addr + " was not a valid MAC address");
+            throw new IllegalArgumentException(macAddr + " was not a valid MAC address");
         }
         long longAddr = 0;
         for (int i = 0; i < parts.length; i++) {
             int x = Integer.valueOf(parts[i], 16);
             if (x < 0 || 0xff < x) {
-                throw new IllegalArgumentException(addr + "was not a valid MAC address");
+                throw new IllegalArgumentException(macAddr + "was not a valid MAC address");
             }
             longAddr = x + (longAddr << 8);
         }

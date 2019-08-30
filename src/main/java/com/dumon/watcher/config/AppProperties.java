@@ -19,8 +19,18 @@ import javax.validation.constraints.Pattern;
     @PropertySource(value = "file:${app.config}", ignoreResourceNotFound = true)})
 public class AppProperties {
 
+    @NotBlank
+    private String usersFile;
     @NotNull
     private Watcher watcher;
+
+    public String getUsersFile() {
+        return usersFile;
+    }
+
+    public void setUsersFile(String usersFile) {
+        this.usersFile = usersFile;
+    }
 
     public Watcher getWatcher() {
         return watcher;

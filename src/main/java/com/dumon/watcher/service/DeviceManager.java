@@ -8,6 +8,7 @@ import com.dumon.watcher.repo.DeviceRepository;
 import com.dumon.watcher.service.watcher.DeviceWatcherFactory;
 import com.dumon.watcher.service.watcher.Watcher;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -51,9 +52,8 @@ public class DeviceManager {
         List<Device> foundDevices = watcher.scanNetwork().stream().parallel()
                 .map(deviceConverter::convert)
                 .collect(Collectors.toList());
-        List<Long> foundIds = foundDevices.stream().map(Device::getMacAddress).collect(Collectors.toList());
-        updateNonActiveDevices(foundIds);
-        deviceRepository.saveAll(foundDevices);
+        List<Device> allDevices = mergeWithExisted(foundDevices);
+        deviceRepository.saveAll(allDevices);
     }
 
     /**
@@ -70,12 +70,34 @@ public class DeviceManager {
         });
     }
 
-    private void updateNonActiveDevices(final List<Long> activeDeviceIds) {
+    /**
+     * Deactivate existed, if absent in the found list.
+     * Keep assigned name for found and existed.
+     * Keep new found.
+     * @param foundDevices
+     * @return
+     */
+    private List<Device> mergeWithExisted(final List<Device> foundDevices) {
+        List<Device> mergedDevices = Lists.newArrayList();
+        List<Long> foundIds = foundDevices.stream().map(Device::getMacAddress).collect(Collectors.toList());
         deviceRepository.findAll().forEach(device -> {
-            if (!activeDeviceIds.contains(device.getMacAddress())) {
+            long devId = device.getMacAddress();
+            if (!foundIds.contains(devId)) {
                 device.setActive(false);
+            } else {
+                device.setActive(true);
+                foundIds.remove(devId);
+                foundDevices.stream()
+                        .filter(foundDev -> device.getMacAddress() == devId)
+                        .findFirst().ifPresent(dev -> dev.setName(device.getName()));
             }
+            mergedDevices.add(device);
         });
+        List<Device> newDevices = foundDevices.stream()
+                .filter(device -> foundIds.contains(device.getMacAddress()))
+                .collect(Collectors.toList());
+        mergedDevices.addAll(newDevices);
+        return mergedDevices;
     }
 
     public void setPingTimeout(final int timeout) {

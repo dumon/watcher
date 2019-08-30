@@ -1,7 +1,6 @@
 package com.dumon.watcher.config;
 
 import com.dumon.watcher.entity.User;
-import com.dumon.watcher.helper.Constants;
 import com.dumon.watcher.helper.LoadHelper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +34,8 @@ public class SpringConfig extends WebSecurityConfigurerAdapter {
 	private ResourceLoader resourceLoader;
 	@Resource
 	private DataSource dataSource;
+	@Resource
+	private AppProperties appProperties;
 
 	/**
 	 * Forced action because {@link EnableJdbcHttpSession} disables spring-boot schema auto-init
@@ -90,7 +91,7 @@ public class SpringConfig extends WebSecurityConfigurerAdapter {
 	@Override
 	public void configure(final AuthenticationManagerBuilder auth) throws Exception {
 		InMemoryUserDetailsManagerConfigurer<AuthenticationManagerBuilder> inMemoryAuth = auth.inMemoryAuthentication();
-		Optional<String> usersFilePath = LoadHelper.getJvmArg(Constants.JVM.USERS);
+		Optional<String> usersFilePath = LoadHelper.getJvmArg(appProperties.getUsersFile());
 		List<User> users;
 		if (usersFilePath.isPresent()) {
 			users = LoadHelper.importUsersFromFile(usersFilePath.get());
