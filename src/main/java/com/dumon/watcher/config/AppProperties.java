@@ -1,5 +1,6 @@
 package com.dumon.watcher.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
@@ -16,9 +17,11 @@ import javax.validation.constraints.Pattern;
 @ConfigurationProperties("app")
 @PropertySources({
     @PropertySource("classpath:./config/app.config"),
-    @PropertySource(value = "file:${app.config}", ignoreResourceNotFound = true)})
+    @PropertySource(value = "file:${app.config:./app.config}", ignoreResourceNotFound = true)})
 public class AppProperties {
 
+    @Value("${spring.datasource.driverClassName}")
+    private String dataBaseDriver;
     @NotBlank
     private String usersFile;
     @NotNull
@@ -30,6 +33,10 @@ public class AppProperties {
 
     public void setUsersFile(String usersFile) {
         this.usersFile = usersFile;
+    }
+
+    public String getDataBaseDriver() {
+        return dataBaseDriver;
     }
 
     public Watcher getWatcher() {

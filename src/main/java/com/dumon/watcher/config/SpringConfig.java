@@ -1,11 +1,13 @@
 package com.dumon.watcher.config;
 
-import com.dumon.watcher.entity.User;
+import com.dumon.watcher.dto.User;
 import com.dumon.watcher.helper.LoadHelper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpMethod;
+import org.springframework.jdbc.core.ConnectionCallback;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configurers.provisioning.InMemoryUserDetailsManagerConfigurer;
@@ -30,23 +32,51 @@ import javax.sql.DataSource;
 @EnableJdbcHttpSession
 public class SpringConfig extends WebSecurityConfigurerAdapter {
 
+	private static final String SESSION_TABLE_CREATE_SCRIPT_PATH = "classpath:org/springframework/session/jdbc/schema-%s.sql";
+	private static final String SESSION_TABLE_DROP_SCRIPT_PATH = String.format(SESSION_TABLE_CREATE_SCRIPT_PATH, "drop-%s");
+
 	@Resource
 	private ResourceLoader resourceLoader;
 	@Resource
 	private DataSource dataSource;
 	@Resource
 	private AppProperties appProperties;
+	@Resource
+	private JdbcTemplate jdbcTemplate;
 
 	/**
 	 * Forced action because {@link EnableJdbcHttpSession} disables spring-boot schema auto-init
 	 * (all spring-boot's props 'spring.session.*' are omitted)
 	 */
 	@PostConstruct
-	public void dataSourceSessionsInit() throws SQLException {
+	public void dataSourceInit() throws SQLException {
 		Connection connection = dataSource.getConnection();
-		org.springframework.core.io.Resource resource =
-				resourceLoader.getResource("classpath:org/springframework/session/jdbc/schema-h2.sql");
-		ScriptUtils.executeSqlScript(connection, resource);
+		initSessions(connection);
+	}
+
+	private void initSessions(final Connection connection) {
+		org.springframework.core.io.Resource dropScript =
+				resourceLoader.getResource(getSessionTablesScriptPath( true));
+		org.springframework.core.io.Resource createScript =
+				resourceLoader.getResource(getSessionTablesScriptPath( false));
+		ScriptUtils.executeSqlScript(connection, dropScript);
+		ScriptUtils.executeSqlScript(connection, createScript);
+	}
+
+	private String getSessionTablesScriptPath(final boolean isDrop) {
+		String scriptPath;
+		String dbVendorName = getDbVendor().toLowerCase();
+		if (isDrop) {
+			scriptPath = String.format(SESSION_TABLE_DROP_SCRIPT_PATH, dbVendorName);
+		} else {
+			scriptPath = String.format(SESSION_TABLE_CREATE_SCRIPT_PATH, dbVendorName);
+		}
+		return scriptPath;
+	}
+
+	private String getDbVendor() {
+		return this.jdbcTemplate.execute((ConnectionCallback<String>) connection ->
+				connection.getMetaData().getDatabaseProductName());
 	}
 
 	@Bean
