@@ -1,4 +1,4 @@
-package com.dumon.watcher.entity;
+package com.dumon.watcher.dto;
 
 import lombok.Data;
 

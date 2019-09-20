@@ -2,7 +2,7 @@ package com.dumon.watcher.helper;
 
 import static com.dumon.watcher.helper.Constants.JVM.JVM_PARAM_PREFIX;
 
-import com.dumon.watcher.entity.User;
+import com.dumon.watcher.dto.User;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.type.TypeReference;
