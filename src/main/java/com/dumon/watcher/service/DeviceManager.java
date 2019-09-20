@@ -32,7 +32,7 @@ public class DeviceManager {
     @PostConstruct
     public void init() {
         AppProperties.Watcher watcherConfig = appProperties.getWatcher();
-        this.watcher = DeviceWatcherFactory.getWatcher(watcherConfig.getLocalIp());
+        this.watcher = DeviceWatcherFactory.getWatcher(watcherConfig.getNetwork(), watcherConfig.getMask());
         this.watcher.setPingTimeout(watcherConfig.getPingTimeout());
     }
 
@@ -43,6 +43,10 @@ public class DeviceManager {
     public void assignName(final String deviceId, final String name) {
         long id = ConversionHelper.stringMacToLong(deviceId);
         deviceRepository.findById(id).ifPresent(device -> device.setName(name));
+    }
+
+    public String getCurrentNetwork() {
+        return watcher.getSubnet();
     }
 
     /**

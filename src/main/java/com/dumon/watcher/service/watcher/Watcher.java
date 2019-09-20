@@ -29,4 +29,10 @@ public interface Watcher {
     boolean checkExisted(Device device);
 
     void setPingTimeout(int pingTimeout);
+
+    /**
+     * Return current scanned subnet in CIDR format
+     * @return
+     */
+    String getSubnet();
 }

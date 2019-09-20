@@ -16,8 +16,8 @@ public class UnixDeviceWatcher extends DeviceWatcher {
     private static final String GET_DNS_IP_CMD =
             "cat /etc/resolv.conf |grep -i '^nameserver'|head -n1|cut -d ' ' -f2";
 
-    UnixDeviceWatcher(final String ip) {
-        super(ip, ARP_CMD);
+    UnixDeviceWatcher(final String ip, final String mask) {
+        super(ip, mask, ARP_CMD);
     }
 
     @Override

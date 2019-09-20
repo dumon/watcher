@@ -8,6 +8,9 @@ import com.dumon.watcher.dto.DeviceData;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.net.util.SubnetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +24,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,12 +38,12 @@ public abstract class DeviceWatcher implements Watcher {
 
     private final String[] arpCmd;
     private final String nslookupCmd = "nslookup %s %s";
-    private InetAddress localhost;
+    private final SubnetUtils subnet;
     private final String dnsIp;
     private int pingTimeout = DEFAULT_PING_TIMEOUT;
 
-    public DeviceWatcher(final String localIp, final String[] arpCmd) {
-        localhost = convertIpString(localIp);
+    public DeviceWatcher(final String network, final String mask, final String[] arpCmd) {
+        subnet = defineSubnet(network, mask);
         this.arpCmd = arpCmd;
         dnsIp = Optional.ofNullable(getDnsServerIp()).orElse(DEFAULT_IP_ADDRESS);
     }
@@ -62,6 +64,32 @@ public abstract class DeviceWatcher implements Watcher {
         return Optional.empty();
     }
 
+    @Override
+    public String getSubnet() {
+        return subnet.getInfo().getCidrSignature();
+    }
+
+    private SubnetUtils defineSubnet(final String network, final String mask) {
+        SubnetUtils subnet;
+        if (StringUtils.isNotBlank(mask) && !network.contains("/")) {
+            if (mask.length() > 2) {
+                subnet = new SubnetUtils(network, mask);
+            } else {
+                subnet = new SubnetUtils(network + "/" + mask);
+            }
+            subnet.setInclusiveHostCount(true);
+        } else {
+            subnet = defineSubnet(network);
+        }
+        return subnet;
+    }
+
+    private SubnetUtils defineSubnet(final String network) {
+        SubnetUtils subnet = new SubnetUtils(network);
+        subnet.setInclusiveHostCount(true);
+        return subnet;
+    }
+
     private Optional<DeviceData> determineDevice(final String ip) {
         return Optional.ofNullable(getMacForIp(ip)).
                 map(mac -> {
@@ -75,22 +103,32 @@ public abstract class DeviceWatcher implements Watcher {
      * Async process
      */
     private List<String> getAllReachableIps() {
-        byte[] ip = localhost.getAddress(); // this code assumes IPv4 is used
+        String[] ipAddresses = subnet.getInfo().getAllAddresses();
 
         List<CompletableFuture<String>> futures = Lists.newArrayList();
-        AtomicInteger counter = new AtomicInteger(0);
-        for (int i = 1; i <= 254; i++) {
-            final byte ipPath = (byte) counter.incrementAndGet();
-            futures.add(CompletableFuture.supplyAsync(() -> tryResolveIp(ip, ipPath), THREAD_POOL));
+
+        for (final String ipAddress : ipAddresses) {
+            getCheckedIp(ipAddress).ifPresent(ip ->
+                    futures.add(CompletableFuture.supplyAsync(() -> tryResolveIp(ip), THREAD_POOL)));
         }
 
         return futures.stream().map(CompletableFuture::join).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    private String tryResolveIp(byte[] ip, byte i) {
+    private Optional<byte[]> getCheckedIp(final String ipAddress) {
+        Optional<byte[]> ipByteArray = Optional.empty();
+        String ip4octetStr = ipAddress.substring(ipAddress.lastIndexOf(".") + 1);
+        int ip4octet = Integer.parseInt(ip4octetStr);
+        if (ip4octet > 0 && ip4octet < 255) {
+            int ip = subnet.getInfo().asInteger(ipAddress);
+            ipByteArray = Optional.of(Ints.toByteArray(ip));
+        }
+        return ipByteArray;
+    }
+
+    private String tryResolveIp(byte[] ip) {
         String reachableIp = null;
         try {
-            ip[3] = i;
             InetAddress address = InetAddress.getByAddress(ip);
             if (address.isReachable(pingTimeout)) {
                 LOG.info("{} Address is reachable", address );
@@ -210,6 +248,7 @@ public abstract class DeviceWatcher implements Watcher {
         return String.format(nslookupCmd, ip , dnsIp);
     }
 
+    @Deprecated
     private InetAddress convertIpString(final String ip) {
         InetAddress localIp = null;
         try {

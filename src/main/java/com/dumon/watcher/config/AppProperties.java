@@ -50,19 +50,28 @@ public class AppProperties {
     public static class Watcher {
 
         @NotBlank
-        @Pattern(regexp="([0-9]{1,3}.?){4}")
-        private String localIp;
+        @Pattern(regexp="([0-9.]{1,3}){4}([/][0-9]{1,2})?")
+        private String network;
+        private String mask;
         @Min(value = 500, message = "no reasonable to make it faster")
         private int pingTimeout;
         @Min(value = 60000, message = "no reasonable to set less than 1min")
         private int scanInterval;
 
-        public String getLocalIp() {
-            return localIp;
+        public String getNetwork() {
+            return network;
         }
 
-        public void setLocalIp(String localIp) {
-            this.localIp = localIp;
+        public void setNetwork(String network) {
+            this.network = network;
+        }
+
+        public String getMask() {
+            return mask;
+        }
+
+        public void setMask(String mask) {
+            this.mask = mask;
         }
 
         public int getPingTimeout() {

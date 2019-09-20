@@ -48,7 +48,7 @@
 
             <sec:authorize access="isAuthenticated()">
                 <div class="starter-template">
-                    <h1>Network Devices</h1>
+                    <h1>Network Devices | Subnet: <font color="blue">${network}</font></h1>
                     <hr style="margin-top: 0px;border-top: 1px solid #337ab7">
                 </div>
 
