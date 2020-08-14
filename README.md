@@ -10,7 +10,8 @@ Included features:
  
 ## Application usage
  * Build: mvn clean install
- * Run: java -jar watcher-0.0.1-BETA.war --server.port=8081
+ * Run with specified port (for web-application) and network (ip/mask):<br>
+ java -jar watcher-0.0.1-BETA.war --server.port=8081 --app.watcher.network=192.168.0.0/24
  * Navigate to: http://localhost:8081 (login/pass -> admin/123)
    
 ## Configurable options
