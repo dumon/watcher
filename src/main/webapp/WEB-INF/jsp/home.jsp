@@ -76,8 +76,8 @@
                                             <input type="text" class="form-control" placeholder="<jsp:text>${device.name}</jsp:text>" aria-label="device name" aria-describedby="basic-addon2" onkeypress="keyPress(event, this.nextSibling.nextSibling)">
                                             <button type="button" id="${device.macAddress}"
                                                     onclick="updateDevice(this.id, this.previousSibling.previousSibling.value, '${device.ipAddress}', '${device.active}', '${device.lastActiveTime}')"
-                                                    class="btn btn-danger" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                Action
+                                                    class="btn btn-info" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                Save
                                             </button>
                                         </div>
                                     </td>
